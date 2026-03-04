@@ -285,15 +285,16 @@ class _HomePageState extends State<HomePage> {
         title: const Text('Business Card Reader'),
       ),
       body: SafeArea(
-        child: Padding(
-          padding: const EdgeInsets.all(14),
-          child: Column(
+        child: Scrollbar(
+          child: ListView(
+            padding: const EdgeInsets.all(14),
             children: [
               _controls(cs),
               const SizedBox(height: 12),
               if (_loading) const LinearProgressIndicator(),
+              if (_loading) const SizedBox(height: 12),
               if (!_loading) const SizedBox(height: 4),
-              Expanded(child: _content(cs)),
+              ..._contentSections(cs),
             ],
           ),
         ),
@@ -301,25 +302,27 @@ class _HomePageState extends State<HomePage> {
     );
   }
 
-  Widget _content(ColorScheme cs) {
+  List<Widget> _contentSections(ColorScheme cs) {
     if (_error != null) {
-      return _errorView(_error!);
+      return [_errorView(_error!)];
     }
 
     if (_scanMode == _ScanMode.singleSide) {
-      if (_singleResult == null) return _emptyState(cs);
-      return _singleResultView(_singleResult!);
+      if (_singleResult == null) return [_emptyState(cs)];
+      return _singleResultSections(_singleResult!);
     }
 
     if (_doubleResult == null) {
-      return _emptyState(
+      return [
+        _emptyState(
         cs,
         title: 'Select front and back, then scan both',
         subtitle: 'Double-side mode merges both card sides into one result.',
-      );
+      ),
+      ];
     }
 
-    return _doubleResultView(_doubleResult!);
+    return _doubleResultSections(_doubleResult!);
   }
 
   Widget _controls(ColorScheme cs) {
@@ -564,60 +567,56 @@ class _HomePageState extends State<HomePage> {
     );
   }
 
-  Widget _singleResultView(BusinessCardScanResult result) {
-    return ListView(
-      children: [
-        if (_singleImagePath != null) _imageCard(_singleImagePath!, 'Selected Image'),
-        const SizedBox(height: 12),
-        _parsedCard(
-          title: 'Parsed Details',
-          result: result,
-          addresses: _singleAddresses,
-        ),
-        _rawTextCard(title: 'Raw Text', text: result.data.rawText),
-      ],
-    );
+  List<Widget> _singleResultSections(BusinessCardScanResult result) {
+    return [
+      if (_singleImagePath != null) _imageCard(_singleImagePath!, 'Selected Image'),
+      const SizedBox(height: 12),
+      _parsedCard(
+        title: 'Parsed Details',
+        result: result,
+        addresses: _singleAddresses,
+      ),
+      _rawTextCard(title: 'Raw Text', text: result.data.rawText),
+    ];
   }
 
-  Widget _doubleResultView(BusinessCardSidesResult result) {
-    return ListView(
-      children: [
-        if (_frontImagePath != null || _backImagePath != null)
-          Row(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Expanded(
-                child: _frontImagePath == null
-                    ? const SizedBox.shrink()
-                    : _imageCard(_frontImagePath!, 'Front'),
-              ),
-              const SizedBox(width: 10),
-              Expanded(
-                child: _backImagePath == null
-                    ? const SizedBox.shrink()
-                    : _imageCard(_backImagePath!, 'Back'),
-              ),
-            ],
-          ),
-        const SizedBox(height: 12),
-        _parsedCard(
-          title: 'Front Parsed',
-          result: result.front,
-          addresses: _frontAddresses,
+  List<Widget> _doubleResultSections(BusinessCardSidesResult result) {
+    return [
+      if (_frontImagePath != null || _backImagePath != null)
+        Row(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Expanded(
+              child: _frontImagePath == null
+                  ? const SizedBox.shrink()
+                  : _imageCard(_frontImagePath!, 'Front'),
+            ),
+            const SizedBox(width: 10),
+            Expanded(
+              child: _backImagePath == null
+                  ? const SizedBox.shrink()
+                  : _imageCard(_backImagePath!, 'Back'),
+            ),
+          ],
         ),
-        _parsedCard(
-          title: 'Back Parsed',
-          result: result.back,
-          addresses: _backAddresses,
-        ),
-        _parsedCard(
-          title: 'Merged Parsed (Primary)',
-          result: result.merged,
-          addresses: _mergedAddresses,
-        ),
-        _rawTextCard(title: 'Merged Raw Text', text: result.merged.data.rawText),
-      ],
-    );
+      const SizedBox(height: 12),
+      _parsedCard(
+        title: 'Front Parsed',
+        result: result.front,
+        addresses: _frontAddresses,
+      ),
+      _parsedCard(
+        title: 'Back Parsed',
+        result: result.back,
+        addresses: _backAddresses,
+      ),
+      _parsedCard(
+        title: 'Merged Parsed (Primary)',
+        result: result.merged,
+        addresses: _mergedAddresses,
+      ),
+      _rawTextCard(title: 'Merged Raw Text', text: result.merged.data.rawText),
+    ];
   }
 
   Widget _imageCard(String path, String title) {
