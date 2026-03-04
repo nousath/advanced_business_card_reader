@@ -1,10 +1,8 @@
-import 'package:google_mlkit_text_recognition/google_mlkit_text_recognition.dart';
-
 /// Supported ML Kit scripts.
 ///
 /// IMPORTANT:
 /// - ML Kit v2 supports: Latin, Chinese, Devanagari, Japanese, Korean.
-/// - For non-Latin scripts you MUST add native dependencies (see README).
+/// - Native recognizers are selected by script via platform channel.
 enum OcrScript {
   latin,
   devanagari,
@@ -14,19 +12,18 @@ enum OcrScript {
 }
 
 extension OcrScriptX on OcrScript {
-  TextRecognitionScript toMlKit() {
+  String get channelValue {
     switch (this) {
       case OcrScript.latin:
-        return TextRecognitionScript.latin;
+        return 'latin';
       case OcrScript.devanagari:
-        // Spelling in the plugin is `devanagiri` (ML Kit enum), keep this mapping.
-        return TextRecognitionScript.devanagiri;
+        return 'devanagari';
       case OcrScript.chinese:
-        return TextRecognitionScript.chinese;
+        return 'chinese';
       case OcrScript.japanese:
-        return TextRecognitionScript.japanese;
+        return 'japanese';
       case OcrScript.korean:
-        return TextRecognitionScript.korean;
+        return 'korean';
     }
   }
 

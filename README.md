@@ -1,140 +1,70 @@
-# 📇 advanced_business_card_reader
+# advanced_business_card_reader
 
-Business/visiting card reader for Flutter using **Google ML Kit Text Recognition**.
+Business/visiting card reader plugin for Flutter.
 
-✅ OCR (image → text)  
-✅ Best‑effort parsing: **Name / Company / Phone / Email / Website**  
-✅ Works offline (on‑device)  
-✅ Includes **example app** (Camera + Gallery + File picker)
+- Native OCR with Google ML Kit Text Recognition v2 (Android/iOS)
+- Native Entity Extraction (beta) for extra phone/email/url signals
+- Dart-side fallback parsing for name/company/phones/emails/websites
 
-> Status: Currently **tested mostly with India business cards**, but the package is designed to work in **other countries** too (UAE / USA / Saudi / etc.) via `defaultIsoCountry`.
+## What changed
 
----
+This plugin now uses direct native Google ML Kit through a Flutter `MethodChannel`:
 
-## 🌍 Country support (Phones)
+- Channel: `advanced_business_card_reader`
+- Methods:
+  - `ocrFromFile`
+  - `extractEntities`
 
-Phone extraction uses `phone_numbers_parser` and supports country‑aware parsing:
+The public Dart API remains the same:
 
-- If the card contains an international number like **+971… / +1… / +91…**, it parses correctly.
-- If the card contains **local format** numbers (no `+countryCode`), set `defaultIsoCountry`.
+- `BusinessCardReader.scanFromFile(...)`
+- `BusinessCardReader.scanAutoFromFile(...)`
+- `BusinessCardScanResult` / `BusinessCardData`
+- `OcrScript` values (`latin`, `devanagari`, `chinese`, `japanese`, `korean`)
 
-### Examples
+Additive API for double-side cards:
 
-**India**
-```dart
-final r = await BusinessCardReader.scanAutoFromFile(
-  path,
-  preferredScripts: const [OcrScript.latin, OcrScript.devanagari],
-  defaultIsoCountry: 'IN',
-);
-```
+- `BusinessCardReader.scanFromFilesFrontBack(...)`
+- `BusinessCardReader.scanAutoFromFilesFrontBack(...)`
+- `BusinessCardSidesResult` (`front`, `back`, `merged`)
 
-**UAE**
-```dart
-final r = await BusinessCardReader.scanFromFile(
-  path,
-  script: OcrScript.latin,
-  defaultIsoCountry: 'AE',
-);
-```
-
-**USA**
-```dart
-final r = await BusinessCardReader.scanFromFile(
-  path,
-  script: OcrScript.latin,
-  defaultIsoCountry: 'US',
-);
-```
-
-**Saudi Arabia**
-```dart
-final r = await BusinessCardReader.scanFromFile(
-  path,
-  script: OcrScript.latin,
-  defaultIsoCountry: 'SA',
-);
-```
-
-> Tip: If your users are in multiple regions, set `defaultIsoCountry` from a **user profile / app setting**.
-
----
-
-## 🔤 OCR language/script support
-
-ML Kit Text Recognition v2 is **script‑based** and supports:
-
-- **Latin** (English, most cards worldwide)
-- **Devanagari** (Hindi/Marathi/Nepali)
-- **Chinese / Japanese / Korean**
-
-### Important limitation (Arabic / Tamil scripts)
-Google ML Kit **Text Recognition v2** (used by `google_mlkit_text_recognition`) does **not** provide an Arabic or Tamil script recognizer in this API.
-- UAE / Saudi cards written in **English** → ✅ works (Latin)
-- UAE / Saudi cards written mainly in **Arabic script** → ⚠️ not supported by this ML Kit recognizer (you would need another OCR engine)
-
----
-
-## 📦 Install
+## Install
 
 ```yaml
 dependencies:
   advanced_business_card_reader: ^1.0.0
 ```
 
----
-
-## ⚙️ Platform setup (optional scripts)
+## Platform requirements
 
 ### Android
 
-If you need non‑Latin scripts, add only what you need in your **app**:
+- Minimum SDK: `26` (required because of ML Kit Entity Extraction)
+- ML Kit dependencies are provided by the plugin:
+  - `com.google.mlkit:text-recognition:16.0.1`
+  - `com.google.mlkit:text-recognition-devanagari:16.0.1`
+  - `com.google.mlkit:text-recognition-chinese:16.0.1`
+  - `com.google.mlkit:text-recognition-japanese:16.0.1`
+  - `com.google.mlkit:text-recognition-korean:16.0.1`
+  - `com.google.mlkit:entity-extraction:16.0.0-beta6`
 
-`android/app/build.gradle` (Groovy)
-```gradle
-dependencies {
-  implementation "com.google.mlkit:text-recognition-devanagari:16.0.1"
-  implementation "com.google.mlkit:text-recognition-chinese:16.0.1"
-  implementation "com.google.mlkit:text-recognition-japanese:16.0.1"
-  implementation "com.google.mlkit:text-recognition-korean:16.0.1"
-}
-```
-
-`android/app/build.gradle.kts` (Kotlin DSL)
-```kotlin
-dependencies {
-  implementation("com.google.mlkit:text-recognition-devanagari:16.0.1")
-  implementation("com.google.mlkit:text-recognition-chinese:16.0.1")
-  implementation("com.google.mlkit:text-recognition-japanese:16.0.1")
-  implementation("com.google.mlkit:text-recognition-korean:16.0.1")
-}
-```
-
-> Latin works by default; add only the extra scripts you truly need (APK size increases).
+If you want a smaller binary, you can fork and remove script-specific recognizers you do not need.
 
 ### iOS
 
-In your **app** `ios/Podfile` (add only required pods):
+- iOS deployment target: `15.5`
+- 64-bit devices only (Apple requirement)
+- Pods used by this plugin:
+  - `GoogleMLKit/TextRecognition` `8.0.0`
+  - `GoogleMLKit/TextRecognitionChinese` `8.0.0`
+  - `GoogleMLKit/TextRecognitionDevanagari` `8.0.0`
+  - `GoogleMLKit/TextRecognitionJapanese` `8.0.0`
+  - `GoogleMLKit/TextRecognitionKorean` `8.0.0`
+  - `GoogleMLKit/EntityExtraction` `8.0.0`
 
-```ruby
-pod 'GoogleMLKit/TextRecognitionDevanagari', '~> 9.0.0'
-pod 'GoogleMLKit/TextRecognitionChinese', '~> 9.0.0'
-pod 'GoogleMLKit/TextRecognitionJapanese', '~> 9.0.0'
-pod 'GoogleMLKit/TextRecognitionKorean', '~> 9.0.0'
-```
+Entity Extraction models are downloaded on-device with `downloadModelIfNeeded()` before annotation.
 
-Then:
-
-```bash
-cd ios
-pod install
-```
-
----
-
-## ✅ Usage
-
-### Selected script
+## Usage
 
 ```dart
 import 'package:advanced_business_card_reader/advanced_business_card_reader.dart';
@@ -148,71 +78,78 @@ final result = await BusinessCardReader.scanFromFile(
 print(result.data.name);
 print(result.data.company);
 print(result.data.phones);
+print(result.data.emails);
+print(result.data.websites);
+print(result.data.rawText);
 ```
 
-### Auto script (recommended)
+Auto script:
 
-For India:
 ```dart
 final result = await BusinessCardReader.scanAutoFromFile(
   filePath,
-  preferredScripts: const [OcrScript.latin, OcrScript.devanagari],
+  preferredScripts: const [
+    OcrScript.latin,
+    OcrScript.devanagari,
+    OcrScript.chinese,
+    OcrScript.japanese,
+    OcrScript.korean,
+  ],
   defaultIsoCountry: 'IN',
 );
 ```
 
-For most other countries (English cards):
+Double-side card:
+
 ```dart
-final result = await BusinessCardReader.scanAutoFromFile(
-  filePath,
-  preferredScripts: const [OcrScript.latin],
-  defaultIsoCountry: 'AE', // or US / SA / etc.
+final sides = await BusinessCardReader.scanAutoFromFilesFrontBack(
+  frontPath: frontImagePath,
+  backPath: backImagePath,
+  preferredScripts: const [
+    OcrScript.latin,
+    OcrScript.devanagari,
+    OcrScript.chinese,
+    OcrScript.japanese,
+    OcrScript.korean,
+  ],
+  defaultIsoCountry: 'IN',
 );
+
+print('Front: ${sides.front.data.toJson()}');
+print('Back: ${sides.back.data.toJson()}');
+print('Merged: ${sides.merged.data.toJson()}');
 ```
 
----
+## Parsing behavior
 
-## 🧪 Example app
+- OCR text is always parsed by regex + `phone_numbers_parser` fallback.
+- Entity Extraction is best-effort enhancement only.
+- `phones`, `emails`, and `websites` are merged as a union of:
+  - parser results
+  - extracted entities
+- If entity extraction fails/model download fails, parser fallback output is still returned.
+
+## Unsupported platforms
+
+Web/desktop are not supported. Calls throw `UnsupportedError` with a clear message.
+
+## Example app
+
+The example app includes:
+
+- Camera
+- Gallery
+- File picker
+- Script selector (Auto + individual scripts)
+- Single-side and double-side scan modes
+
+Run:
 
 ```bash
 cd example
 flutter run
 ```
 
-Example includes:
-- Camera scan
-- Gallery pick
-- File pick (image)
-- Script dropdown (Auto + scripts)
-- Parsed fields + raw text view
-
----
-
-## 🧠 Tips for accuracy
-
-- Good lighting, no blur
-- Keep the card flat and fill the frame
-- Cropping before OCR improves results a lot
-- Always show a confirmation/edit screen (cards vary)
-
----
-
-## 🗺️ Roadmap ideas (future)
-
-- Country auto‑detect (based on +country code / address keywords)
-- Region presets (IN / AE / US / SA)
-- Better name/company heuristics for different card styles
-
----
-
-## ☕ Sponsor a cup of tea
-
-If this package saves you time, you can sponsor:
-
-https://github.com/sponsors/nousath
-
----
-
-## 📄 License
+## License
 
 MIT

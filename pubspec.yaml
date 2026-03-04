@@ -1,6 +1,6 @@
 name: advanced_business_card_reader
-description: Business/visiting card reader using Google ML Kit Text Recognition (Flutter). Extracts text and parses name, company, phone, email, website.
-version: 1.0.0
+description: Business/visiting card reader using native Google ML Kit Text Recognition v2 + Entity Extraction. Extracts text and parses name, company, phone, email, website.
+version: 1.1.0
 homepage: https://github.com/nousath/advanced_business_card_reader
 repository: https://github.com/nousath/advanced_business_card_reader
 issue_tracker: https://github.com/nousath/advanced_business_card_reader/issues
@@ -19,10 +19,18 @@ environment:
 dependencies:
   flutter:
     sdk: flutter
-  google_mlkit_text_recognition: ^0.15.1
   phone_numbers_parser: ^9.0.19
 
 dev_dependencies:
   flutter_test:
     sdk: flutter
   flutter_lints: ^6.0.0
+
+flutter:
+  plugin:
+    platforms:
+      android:
+        package: com.nh97.advanced_business_card_reader
+        pluginClass: AdvancedBusinessCardReaderPlugin
+      ios:
+        pluginClass: AdvancedBusinessCardReaderPlugin

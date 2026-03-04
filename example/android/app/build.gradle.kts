@@ -20,7 +20,7 @@ android {
 
     defaultConfig {
         applicationId = "com.example.advanced_business_card_reader_example"
-        minSdk = flutter.minSdkVersion
+        minSdk = 26
         targetSdk = flutter.targetSdkVersion
         versionCode = flutter.versionCode
         versionName = flutter.versionName
@@ -35,11 +35,4 @@ android {
 
 flutter {
     source = "../.."
-}
-
-dependencies {
-    implementation("com.google.mlkit:text-recognition-chinese:16.0.1")
-    implementation("com.google.mlkit:text-recognition-devanagari:16.0.1")
-    implementation("com.google.mlkit:text-recognition-japanese:16.0.1")
-    implementation("com.google.mlkit:text-recognition-korean:16.0.1")
 }
